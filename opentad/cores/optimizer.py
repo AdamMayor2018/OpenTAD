@@ -21,6 +21,7 @@ def build_optimizer(cfg, model, logger):
 
         else:  # frozen backbone
             backbone_optim_groups = []
+            cfg.pop("backbone")
             logger.info(f"Freeze the backbone...")
     else:
         backbone_optim_groups = []

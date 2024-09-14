@@ -1,4 +1,4 @@
-annotation_path = "/data/ysp_public_data/sport-editing/basketball_annotation/basketball_anno.json"
+annotation_path = "/data/ysp_public_data/sport-editing/basketball_annotation/default_anno.json"
 class_map = "/data/ysp_public_data/sport-editing/basketball_annotation/category_idx.txt"
 data_path = "/data/ysp_public_data/sport-editing/basketball_video"
 block_list = None

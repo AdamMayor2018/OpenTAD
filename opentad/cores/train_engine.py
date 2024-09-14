@@ -25,6 +25,9 @@ def train_one_epoch(
 
     model.train()
     for iter_idx, data_dict in enumerate(train_loader):
+        for item in data_dict:
+            if item in ["inputs", "masks"]:
+                data_dict[item] = data_dict[item].cuda()
         optimizer.zero_grad()
 
         # current learning rate
@@ -105,6 +108,9 @@ def val_one_epoch(
 
     model.eval()
     for data_dict in tqdm.tqdm(val_loader, disable=(rank != 0)):
+        for item in data_dict:
+            if item in ["inputs", "masks"]:
+                data_dict[item] = data_dict[item].cuda()
         with torch.cuda.amp.autocast(dtype=torch.float16, enabled=use_amp):
             with torch.no_grad():
                 losses = model(**data_dict, return_loss=True)
