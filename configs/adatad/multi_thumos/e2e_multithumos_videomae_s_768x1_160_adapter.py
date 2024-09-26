@@ -148,7 +148,7 @@ post_processing = dict(
         multiclass=True,
         voting_thresh=0.7,  #  set 0 to disable
     ),
-    save_dict=False,
+    save_dict=True,
 )
 
 workflow = dict(
@@ -160,4 +160,4 @@ workflow = dict(
     end_epoch=80,
 )
 
-work_dir = "exps/multithumos/adatad/e2e_actionformer_videomae_s_768x1_160_adapter"
+work_dir = "exps/multithumos/adatad/e2e_actionformer_videomae_s_768x1_160_adapter/output_01"

@@ -100,7 +100,7 @@ model = dict(
                 dict(type="Interpolate", keys=["feats"], size=window_size),
             ],
             norm_eval=False,  # also update the norm layers
-            freeze_backbone=False,  # unfreeze the backbone
+            freeze_backbone=True,  # unfreeze the backbone
         ),
     ),
     projection=dict(
@@ -111,9 +111,9 @@ model = dict(
 )
 
 solver = dict(
-    train=dict(batch_size=2, num_workers=2),
-    val=dict(batch_size=2, num_workers=2),
-    test=dict(batch_size=2, num_workers=2),
+    train=dict(batch_size=32, num_workers=4),
+    val=dict(batch_size=32, num_workers=4),
+    test=dict(batch_size=32, num_workers=4),
     clip_grad_norm=1,
     amp=True,
     fp16_compress=True,
@@ -123,7 +123,7 @@ solver = dict(
 
 optimizer = dict(
     type="AdamW",
-    lr=1e-4,
+    lr=2e-4,
     weight_decay=0.05,
     paramwise=True,
     backbone=dict(
@@ -152,8 +152,8 @@ workflow = dict(
     checkpoint_interval=2,
     val_loss_interval=-1,
     val_eval_interval=2,
-    val_start_epoch=40,
+    val_start_epoch=1,
     end_epoch=60,
 )
 
-work_dir = "exps/thumos/adatad/e2e_actionformer_videomae_s_768x1_160_adapter"
+work_dir = "exps/thumos/adatad/e2e_actionformer_videomae_s_768x1_160_adapter/basketball-0919"

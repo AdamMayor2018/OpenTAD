@@ -1,6 +1,6 @@
-annotation_path = "data/multithumos/annotations/multithumos_anno.json"
-class_map = "data/multithumos/annotations/category_idx.txt"
-data_path = "data/thumos-14/raw_data/video"
+annotation_path = "data/thumos-14/annotations/thumos_14_anno_test.json"
+class_map = "data/thumos-14/annotations/category_idx.txt"
+data_path = "/data/zzm/aigc/material/sports/basket_test"
 block_list = None
 
 window_size = 256
