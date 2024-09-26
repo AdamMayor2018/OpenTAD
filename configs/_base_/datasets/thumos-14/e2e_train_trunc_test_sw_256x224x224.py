@@ -95,7 +95,7 @@ dataset = dict(
 
 evaluation = dict(
     type="mAP",
-    subset="validation",
+    subset="test",
     tiou_thresholds=[0.3, 0.4, 0.5, 0.6, 0.7],
     ground_truth_filename=annotation_path,
 )

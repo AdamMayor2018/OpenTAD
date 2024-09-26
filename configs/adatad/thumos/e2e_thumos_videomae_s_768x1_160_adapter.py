@@ -144,16 +144,16 @@ post_processing = dict(
         multiclass=True,
         voting_thresh=0.7,  #  set 0 to disable
     ),
-    save_dict=False,
+    save_dict=True,
 )
 
 workflow = dict(
     logging_interval=50,
     checkpoint_interval=2,
-    val_loss_interval=-1,
-    val_eval_interval=2,
+    val_loss_interval=1,
+    val_eval_interval=1,
     val_start_epoch=1,
-    end_epoch=60,
+    end_epoch=200,
 )
 
-work_dir = "exps/thumos/adatad/e2e_actionformer_videomae_s_768x1_160_adapter/basketball-0919"
+work_dir = "exps/thumos/adatad/e2e_actionformer_videomae_s_768x1_160_adapter/basketball-0925"
