@@ -177,7 +177,6 @@ class mAP:
 
     def multi_thread_compute_average_precision(self):
         self.mAP_result_dict = mp.Manager().dict()
-
         num_total = len(self.activity_index.values())
         num_activity_per_thread = num_total // self.thread + 1
 
@@ -185,7 +184,8 @@ class mAP:
         for tid in range(self.thread):
             num_start = int(tid * num_activity_per_thread)
             num_end = min(num_start + num_activity_per_thread, num_total)
-
+            if num_end <= num_start:
+                break
             p = mp.Process(
                 target=self.wrapper_compute_average_precision,
                 args=(list(self.activity_index.values())[num_start:num_end],),
@@ -199,6 +199,8 @@ class mAP:
         ap = np.zeros((len(self.tiou_thresholds), len(self.activity_index.items())))
         for i, cidx in enumerate(self.activity_index.values()):
             ap[:, cidx] = self.mAP_result_dict[i]
+        ap_table = pd.DataFrame(ap, columns=self.activity_index.keys(), index=[f"tiou@{i}" for i in self.tiou_thresholds])
+        print("Detail miou status: {}".format(ap_table))
         return ap
 
     def multi_thread_compute_topkx_recall(self):
@@ -208,6 +210,7 @@ class mAP:
         num_activity_per_thread = num_total // self.thread + 1
 
         processes = []
+        # 把每类label的指标计算分配到不同的进程中
         for tid in range(self.thread):
             num_start = int(tid * num_activity_per_thread)
             num_end = min(num_start + num_activity_per_thread, num_total)

@@ -19,8 +19,8 @@ from opentad.utils import update_workdir, set_seed, create_folder, setup_logger
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Test a Temporal Action Detector")
-    parser.add_argument("config", metavar="FILE", type=str, help="path to config file")
-    parser.add_argument("--checkpoint", type=str, default="none", help="the checkpoint path")
+    parser.add_argument("--config", type=str, help="path to config file", default="/data/cx/ysp-2024/OpenTAD/configs/adatad/ysp-basketball/e2e_ysp_basketball_videomae_s_768x1_160_adapter.py")
+    parser.add_argument("--checkpoint", type=str, default="/data/zzm/aigc/OpenTAD/exps/thumos/adatad/e2e_actionformer_videomae_s_768x1_160_adapter/basketball-0919/gpu8_id0/checkpoint/best.pth", help="the checkpoint path")
     parser.add_argument("--seed", type=int, default=42, help="random seed")
     parser.add_argument("--id", type=int, default=0, help="repeat experiment id")
     parser.add_argument("--not_eval", action="store_true", help="whether to not to eval, only do inference")

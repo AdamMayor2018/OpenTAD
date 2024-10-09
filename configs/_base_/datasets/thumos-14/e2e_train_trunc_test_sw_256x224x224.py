@@ -67,7 +67,7 @@ dataset = dict(
     test=dict(
         type="ThumosSlidingDataset",
         ann_file=annotation_path,
-        subset_name="test",
+        subset_name="validation",
         block_list=block_list,
         class_map=class_map,
         data_path=data_path,
@@ -95,7 +95,7 @@ dataset = dict(
 
 evaluation = dict(
     type="mAP",
-    subset="test",
+    subset="validation",
     tiou_thresholds=[0.3, 0.4, 0.5, 0.6, 0.7],
     ground_truth_filename=annotation_path,
 )

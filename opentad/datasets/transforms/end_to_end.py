@@ -201,6 +201,7 @@ class LoadFrames:
         num_segs = gt_segments.shape[0]
 
         trunc_len = trunc_len
+        # 如果feat_len比trunc_len小，则截断为feat_len的crop_ratio倍数(默认是feat_len的0.9~1取随机)，结果是减少trunc_len
         if feat_len <= trunc_len:
             if self.crop_ratio == None:  # do nothing
                 return feats, gt_segments, gt_labels

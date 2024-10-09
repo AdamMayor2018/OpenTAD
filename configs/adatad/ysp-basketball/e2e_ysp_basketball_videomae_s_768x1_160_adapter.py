@@ -90,7 +90,7 @@ model = dict(
             format_shape="NCTHW",
         ),
         custom=dict(
-            pretrain="pretrained/vit-small-p16_videomae-k400-pre_16x4x1_kinetics-400_my.pth",
+            pretrain="/data/cx/ysp-2024/OpenTAD/pretrained/vit-small-p16_videomae-k400-pre_16x4x1_kinetics-400_my.pth",
             pre_processing_pipeline=[
                 dict(type="Rearrange", keys=["frames"], ops="b n c (t1 t) h w -> (b t1) n c t h w", t1=chunk_num),
             ],
@@ -111,9 +111,9 @@ model = dict(
 )
 
 solver = dict(
-    train=dict(batch_size=2, num_workers=2),
-    val=dict(batch_size=2, num_workers=2),
-    test=dict(batch_size=2, num_workers=2),
+    train=dict(batch_size=32, num_workers=8),
+    val=dict(batch_size=32, num_workers=8),
+    test=dict(batch_size=32, num_workers=8),
     clip_grad_norm=1,
     amp=True,
     fp16_compress=True,
@@ -144,13 +144,13 @@ post_processing = dict(
         multiclass=True,
         voting_thresh=0.7,  #  set 0 to disable
     ),
-    save_dict=False,
+    save_dict=True,
 )
 
 workflow = dict(
     logging_interval=50,
     checkpoint_interval=1,
-    val_loss_interval=-1,
+    val_loss_interval=1,
     val_eval_interval=1,
     val_start_epoch=1,
     end_epoch=20,
