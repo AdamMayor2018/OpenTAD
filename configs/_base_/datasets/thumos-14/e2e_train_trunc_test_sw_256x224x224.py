@@ -29,6 +29,7 @@ dataset = dict(
                 trunc_thresh=0.5,
                 crop_ratio=[0.9, 1.0],
             ),
+            
             dict(type="mmaction.DecordDecode"),
             dict(type="mmaction.Resize", scale=(-1, 256)),
             dict(type="mmaction.RandomResizedCrop"),

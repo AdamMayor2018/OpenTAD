@@ -72,13 +72,13 @@ Please refer to [README.md](../../tools/prepare_data/thumos/README.md#download-r
 - To train the model on THUMOS, you can run the following command.
 
 ```bash
-torchrun --nnodes=1 --nproc_per_node=2 --rdzv_backend=c10d --rdzv_endpoint=localhost:0 tools/train.py configs/adatad/thumos/e2e_ysp_basketball_videomae_s_768x1_160_adapter.py
+torchrun --nnodes=1 --nproc_per_node=2 --rdzv_backend=c10d --rdzv_endpoint=localhost:0 tools/train.py configs/ysp/self_aug_video_s_768x1_160_adapter.py
 ```
 
 - To search the adapter's learning rate, or change other hyper-parameters, you can run the following command.
 
 ```bash
-torchrun --nnodes=1 --nproc_per_node=2 --rdzv_backend=c10d --rdzv_endpoint=localhost:0 tools/train.py configs/adatad/thumos/e2e_ysp_basketball_videomae_s_768x1_160_adapter.py \ 
+torchrun --nnodes=1 --nproc_per_node=2 --rdzv_backend=c10d --rdzv_endpoint=localhost:0 tools/train.py configs/ysp/self_aug_video_s_768x1_160_adapter.py \ 
   --cfg-options optimizer.backbone.custom.0.lr=1e-4 --id 1
 ```
 
