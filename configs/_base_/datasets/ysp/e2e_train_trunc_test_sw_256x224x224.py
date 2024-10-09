@@ -1,6 +1,6 @@
-annotation_path = "data/thumos-14/annotations/thumos_14_anno_test.json"
-class_map = "data/thumos-14/annotations/category_idx.txt"
-data_path = "/data/zzm/aigc/material/sports/basket_test"
+annotation_path = "/data/ysp_public_data/sport-editing/basketball_annotation/default_anno.json"
+class_map = "/data/ysp_public_data/sport-editing/basketball_annotation/category_idx.txt"
+data_path = "/data/ysp_public_data/sport-editing/basketball_video"
 block_list = None
 
 window_size = 256
@@ -16,7 +16,7 @@ dataset = dict(
         filter_gt=False,
         # thumos dataloader setting
         feature_stride=4,
-        sample_stride=1,
+        sample_stride=1,  # 1x4=4
         pipeline=[
             dict(type="PrepareVideoInfo", format="mp4"),
             dict(type="mmaction.DecordInit", num_threads=4),
@@ -48,7 +48,7 @@ dataset = dict(
         filter_gt=False,
         # thumos dataloader setting
         feature_stride=4,
-        sample_stride=1,
+        sample_stride=1,  # 1x4=4
         window_size=window_size,
         window_overlap_ratio=0.25,
         pipeline=[
@@ -74,7 +74,7 @@ dataset = dict(
         test_mode=True,
         # thumos dataloader setting
         feature_stride=4,
-        sample_stride=1,
+        sample_stride=1,  # 1x4=4
         window_size=window_size,
         window_overlap_ratio=0.5,
         pipeline=[
@@ -95,6 +95,6 @@ dataset = dict(
 evaluation = dict(
     type="mAP",
     subset="validation",
-    tiou_thresholds=[0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9],
+    tiou_thresholds=[0.3, 0.4, 0.5, 0.6, 0.7],
     ground_truth_filename=annotation_path,
 )

@@ -47,6 +47,9 @@ def eval_one_epoch(
     model.eval()
     result_dict = {}
     for data_dict in tqdm.tqdm(test_loader, disable=(rank != 0)):
+        for item in data_dict:
+            if item in ["inputs", "masks"]:
+                data_dict[item] = data_dict[item].cuda()
         with torch.cuda.amp.autocast(dtype=torch.float16, enabled=use_amp):
             with torch.no_grad():
                 results = model(

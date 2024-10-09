@@ -9,6 +9,7 @@ import numpy as np
 
 from ..builder import PIPELINES
 from torch.nn import functional as F
+import time
 
 
 @PIPELINES.register_module()
@@ -326,6 +327,7 @@ class LoadFrames:
         results["num_clips"] = self.num_clips
         results["clip_len"] = frame_num // self.num_clips
         results["masks"] = masks
+        end = time.time()
         return results
 
 

@@ -30,7 +30,7 @@ from opentad.utils import (
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Train a Temporal Action Detector")
-    parser.add_argument("config", metavar="FILE", type=str, help="path to config file")
+    parser.add_argument("--config", type=str, help="path to config file", default="configs/adatad/ysp-basketball/e2e_ysp_basketball_videomae_s_768x1_160_adapter.py")
     parser.add_argument("--seed", type=int, default=42, help="random seed")
     parser.add_argument("--id", type=int, default=0, help="repeat experiment id")
     parser.add_argument("--resume", type=str, default=None, help="resume from a checkpoint")

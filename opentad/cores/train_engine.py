@@ -24,7 +24,7 @@ def train_one_epoch(
     use_amp = False if scaler is None else True
 
     model.train()
-    for iter_idx, data_dict in enumerate(train_loader):
+    for iter_idx, data_dict in tqdm.tqdm(enumerate(train_loader)):
         optimizer.zero_grad()
 
         # current learning rate

@@ -1,4 +1,4 @@
-_base_ = ["e2e_thumos_videomae_s_768x1_160_adapter.py"]
+_base_ = ["e2e_ysp_basketball_videomae_s_768x1_160_adapter.py"]
 
 window_size = 768
 scale_factor = 2

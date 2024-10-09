@@ -1,5 +1,5 @@
 _base_ = [
-    "../../_base_/datasets/thumos-14/e2e_train_trunc_test_sw_256x224x224.py",  # dataset config
+    "../../_base_/datasets/ysp/e2e_train_trunc_test_sw_256x224x224.py",  # dataset config
     "../../_base_/models/actionformer.py",  # model config
 ]
 
@@ -111,9 +111,9 @@ model = dict(
 )
 
 solver = dict(
-    train=dict(batch_size=32, num_workers=4),
-    val=dict(batch_size=32, num_workers=4),
-    test=dict(batch_size=32, num_workers=4),
+    train=dict(batch_size=2, num_workers=2),
+    val=dict(batch_size=2, num_workers=2),
+    test=dict(batch_size=2, num_workers=2),
     clip_grad_norm=1,
     amp=True,
     fp16_compress=True,
@@ -123,7 +123,7 @@ solver = dict(
 
 optimizer = dict(
     type="AdamW",
-    lr=2e-4,
+    lr=1e-4,
     weight_decay=0.05,
     paramwise=True,
     backbone=dict(
@@ -144,16 +144,16 @@ post_processing = dict(
         multiclass=True,
         voting_thresh=0.7,  #  set 0 to disable
     ),
-    save_dict=True,
+    save_dict=False,
 )
 
 workflow = dict(
     logging_interval=50,
-    checkpoint_interval=2,
-    val_loss_interval=1,
+    checkpoint_interval=1,
+    val_loss_interval=-1,
     val_eval_interval=1,
     val_start_epoch=1,
-    end_epoch=200,
+    end_epoch=20,
 )
 
-work_dir = "exps/thumos/adatad/e2e_actionformer_videomae_s_768x1_160_adapter/basketball-0925"
+work_dir = "exps/ysp-basketball/adatad/e2e_actionformer_videomae_s_768x1_160_adapter_fix_0913"

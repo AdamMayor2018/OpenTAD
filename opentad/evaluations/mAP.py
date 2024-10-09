@@ -199,6 +199,8 @@ class mAP:
         ap = np.zeros((len(self.tiou_thresholds), len(self.activity_index.items())))
         for i, cidx in enumerate(self.activity_index.values()):
             ap[:, cidx] = self.mAP_result_dict[i]
+        ap_table = pd.DataFrame(ap, columns=self.activity_index.keys(), index=[f"tiou@{i}" for i in self.tiou_thresholds])
+        print("Detail miou status: {}".format(ap_table))
         return ap
 
     def multi_thread_compute_topkx_recall(self):

@@ -1,6 +1,7 @@
-annotation_path = "data/thumos-14/annotations/thumos_14_anno.json"
-class_map = "data/thumos-14/annotations/category_idx.txt"
-data_path = "data/thumos-14/raw_data/video"
+annotation_path = "/data/ysp_public_data/sport-editing/basketball_annotation/final_anno.json"
+class_map = "/data/ysp_public_data/sport-editing/basketball_annotation/category_idx.txt"
+data_path = "/data/ysp_public_data/sport-editing/basketball_video_split"
+# data_path = "/data/ysp_public_data/sport-editing/basketball_debug"
 block_list = None
 
 window_size = 256
@@ -28,6 +29,7 @@ dataset = dict(
                 trunc_thresh=0.5,
                 crop_ratio=[0.9, 1.0],
             ),
+            
             dict(type="mmaction.DecordDecode"),
             dict(type="mmaction.Resize", scale=(-1, 256)),
             dict(type="mmaction.RandomResizedCrop"),
@@ -66,7 +68,7 @@ dataset = dict(
     test=dict(
         type="ThumosSlidingDataset",
         ann_file=annotation_path,
-        subset_name="validation",
+        subset_name="test",
         block_list=block_list,
         class_map=class_map,
         data_path=data_path,
@@ -94,7 +96,7 @@ dataset = dict(
 
 evaluation = dict(
     type="mAP",
-    subset="validation",
+    subset="test",
     tiou_thresholds=[0.3, 0.4, 0.5, 0.6, 0.7],
     ground_truth_filename=annotation_path,
 )
