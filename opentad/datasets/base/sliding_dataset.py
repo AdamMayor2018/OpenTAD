@@ -15,6 +15,7 @@ class SlidingWindowDataset:
         data_path,  # folder path of the raw video / pre-extracted feature
         pipeline,  # data pipeline
         class_map,  # path of the class map, convert the class id to category name
+        pt_path,
         filter_gt=False,  # if True, filter out those gt has the scale smaller than 0.01
         class_agnostic=False,  # if True, the class index will be replaced by 0
         block_list=None,  # some videos might be missed in the features or videos, we need to block them
@@ -29,11 +30,13 @@ class SlidingWindowDataset:
         ioa_thresh=0.75,  # the threshold of the completeness of the gt inside the window
         fps=-1,  # some annotations are based on video-seconds
         logger=None,
+        use_pt=True
     ):
         super(SlidingWindowDataset, self).__init__()
 
         # basic settings
         self.data_path = data_path
+        self.pt_path = pt_path
         self.block_list = block_list
         self.ann_file = ann_file
         self.subset_name = subset_name
@@ -56,6 +59,8 @@ class SlidingWindowDataset:
         self.window_stride = int(window_size * (1 - window_overlap_ratio))
         self.ioa_thresh = ioa_thresh
 
+        self.use_pt = use_pt
+
         self.get_dataset()
         self.logger(
             f"{self.subset_name} subset: {len(set([data[0] for data in self.data_list]))} videos, "
@@ -77,10 +82,12 @@ class SlidingWindowDataset:
             blocked_videos = []
 
         self.data_list = []
+        count = 0
         for video_name, video_info in anno_database.items():
+            s = video_info["subset"]
             if (video_name in blocked_videos) or (video_info["subset"] not in self.subset_name):
                 continue
-
+            count += 1
             # get the ground truth annotation
             if self.test_mode:
                 video_anno = {}
@@ -91,6 +98,7 @@ class SlidingWindowDataset:
 
             tmp_data_list = self.split_video_to_windows(video_name, video_info, video_anno)
             self.data_list.extend(tmp_data_list)
+        print(f" there are {count} videos in {s} the subset")
         assert len(self.data_list) > 0, f"No data found in {self.subset_name} subset."
 
     def split_video_to_windows(self, video_name, video_info, video_anno):
@@ -142,6 +150,8 @@ class SlidingWindowDataset:
                             window_snippet_centers,
                         ]
                     )
+                else:
+                    continue
             else:
                 data_list.append(
                     [

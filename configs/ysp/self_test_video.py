@@ -7,9 +7,9 @@ window_size = 64
 scale_factor = 1
 chunk_num = window_size * scale_factor // 16  # 768/16=48 chunks, since videomae takes 16 frames as input
 
-annotation_path = "/data/ysp_public_data/sport-editing/basketball_annotation/short_anno_1030.json"
+annotation_path = "/data/ysp_public_data/sport-editing/basketball_annotation/test_90s.json"
 class_map = "/data/ysp_public_data/sport-editing/basketball_annotation/less_category_idx.txt"
-data_path = "/data/ysp_public_data/sport-editing/basketball_video_split_5class_120s_1030"
+data_path = "/data/ysp_public_data/sport-editing/basketball_video"
 pt_path = "/data/ysp_public_data/sport-editing/basketball_video_split_5class_120s_1030/pt"
 block_list = None
 
@@ -66,7 +66,7 @@ dataset = dict(
         class_map=class_map,
         data_path=data_path,
         pt_path=pt_path,
-        use_pt = True,
+        use_pt = False,
         filter_gt=False,
         test_mode=True,
         # thumos dataloader setting
@@ -75,6 +75,11 @@ dataset = dict(
         window_size=window_size,
         window_overlap_ratio=0.5,
         pipeline=[
+            dict(type="PrepareVideoInfo", format="mp4"),
+            dict(type="mmaction.DecordInit", num_threads=4),
+            dict(type="LoadFrames", num_clips=1, method="sliding_window", scale_factor=scale_factor),
+            dict(type="mmaction.DecordDecode"),
+            dict(type="mmaction.Resize", scale=(-1, 160)),
             dict(type="mmaction.CenterCrop", crop_size=160),
             dict(type="mmaction.FormatShape", input_format="NCTHW"),
             dict(type="ConvertToTensor", keys=["imgs"]),
@@ -184,4 +189,4 @@ evaluation = dict(
     ground_truth_filename=annotation_path,
 )
 
-work_dir = "exps/sports-editing/basketball-1029-freeze"
+work_dir = "exps/sports-editing/basketball-1104-freeze"

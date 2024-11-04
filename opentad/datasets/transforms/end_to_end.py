@@ -197,7 +197,7 @@ class LoadFrames:
         self.trunc_thresh = trunc_thresh
         self.crop_ratio = crop_ratio
 
-    def random_trunc(self, feats, trunc_len, gt_segments, gt_labels, offset=0, max_num_trials=200):
+    def random_trunc(self, feats, trunc_len, gt_segments, gt_labels, offset=0, max_num_trials=3):
         feat_len = feats.shape[0]
         num_segs = gt_segments.shape[0]
 
@@ -213,7 +213,7 @@ class LoadFrames:
                 # corner case
                 if feat_len == trunc_len:
                     return feats, gt_segments, gt_labels
-
+        action = 0
         # try a few times till a valid truncation with at least one action
         for _ in range(max_num_trials):
             # sample a random truncation of the video feats
@@ -234,13 +234,14 @@ class LoadFrames:
 
             # with at least one action
             if seg_idx.sum().item() > 0:
+                action = 1
                 break
 
         feats = feats[st:ed]
         gt_segments = np.stack((left[seg_idx], right[seg_idx]), axis=1)  # [N,2] in feature grids
         gt_segments = gt_segments - st  # shift the time stamps due to truncation
         gt_labels = gt_labels[seg_idx]  # [N]
-        return feats, gt_segments, gt_labels
+        return feats, gt_segments, gt_labels, action
 
     def __call__(self, results):
         assert "total_frames" in results.keys(), "should have total_frames as a key"
@@ -275,7 +276,7 @@ class LoadFrames:
             frame_idxs = np.arange(0, total_frames, frame_stride)
 
             # trunc the frame_idxs
-            frame_idxs, gt_segments, gt_labels = self.random_trunc(
+            frame_idxs, gt_segments, gt_labels, have_action = self.random_trunc(
                 frame_idxs,
                 trunc_len=frame_num,
                 gt_segments=results["gt_segments"] * self.scale_factor,  # gt segment should be mapped to frame level
@@ -314,6 +315,7 @@ class LoadFrames:
                 masks = torch.cat([torch.ones(valid_len), torch.zeros(window_size - valid_len)]).bool()
             else:
                 masks = torch.ones(window_size).bool()
+            have_action = 0
 
         elif self.method == "padding":
             raise NotImplementedError
@@ -327,6 +329,7 @@ class LoadFrames:
         results["num_clips"] = self.num_clips
         results["clip_len"] = frame_num // self.num_clips
         results["masks"] = masks
+        results["have_action"] = have_action
         end = time.time()
         return results
 

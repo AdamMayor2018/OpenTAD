@@ -20,7 +20,7 @@ model = dict(
     ),
     rpn_head=dict(
         type="ActionFormerHead",
-        num_classes=7,
+        num_classes=5,
         in_channels=512,
         feat_channels=512,
         num_convs=2,

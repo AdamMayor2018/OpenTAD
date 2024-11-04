@@ -1,21 +1,20 @@
 _base_ = [
-    # "../../_base_/datasets/thumos-14/self_train_trunc_test_sw_256x224x224.py",  # dataset config
+    # "../_base_/datasets/thumos-14/self_train_trunc_test_sw_256x224x224.py",  # dataset config
     "../_base_/models/actionformer.py",  # model config
 ]
-
-window_size = 64
-scale_factor = 1
-chunk_num = window_size * scale_factor // 16  # 768/16=48 chunks, since videomae takes 16 frames as input
 
 annotation_path = "/data/ysp_public_data/sport-editing/basketball_annotation/short_anno_1030.json"
 class_map = "/data/ysp_public_data/sport-editing/basketball_annotation/less_category_idx.txt"
 data_path = "/data/ysp_public_data/sport-editing/basketball_video_split_5class_120s_1030"
 pt_path = "/data/ysp_public_data/sport-editing/basketball_video_split_5class_120s_1030/pt"
-block_list = None
 
+block_list = None
+window_size = 64
+scale_factor = 1
+chunk_num = window_size * scale_factor // 16  # 768/16=48 chunks, since videomae takes 16 frames as input
 dataset = dict(
     train=dict(
-        type="ThumosPaddingDataset",
+        type="LoadPadddingVideoData",
         ann_file=annotation_path,
         subset_name="training",
         block_list=block_list,
@@ -25,20 +24,25 @@ dataset = dict(
         filter_gt=False,
         # thumos dataloader setting
         feature_stride=4,
-        sample_stride=1,
+        sample_stride=1,  # 1x4=4
         pipeline=[
-            dict(type="mmaction.RandomResizedCrop"),
-            dict(type="mmaction.Resize", scale=(160, 160), keep_ratio=False),
-            dict(type="mmaction.Flip", flip_ratio=0.5),
-            dict(type="mmaction.ImgAug", transforms="default"),
-            dict(type="mmaction.ColorJitter"),
-            dict(type="mmaction.FormatShape", input_format="NCTHW"),
-            dict(type="ConvertToTensor", keys=["imgs", "gt_segments", "gt_labels"]),
-            dict(type="Collect", inputs="imgs", keys=["masks", "gt_segments", "gt_labels"]),
+            dict(type="PrepareVideoInfo", format="mp4"),
+            dict(type="mmaction.DecordInit", num_threads=4),
+            dict(
+                type="LoadFrames",
+                num_clips=1,
+                method="random_trunc",
+                trunc_len=window_size,
+                trunc_thresh=0.75,
+                crop_ratio=[0.9, 1.0],
+                scale_factor=scale_factor,
+            ),
+            dict(type="mmaction.DecordDecode"),
+            dict(type="mmaction.Resize", scale=(-1, 160)),
         ],
     ),
     val=dict(
-        type="ThumosSlidingDataset",
+        type="LoadSlidingVideoData",
         ann_file=annotation_path,
         subset_name="validation",
         block_list=block_list,
@@ -52,36 +56,51 @@ dataset = dict(
         window_size=window_size,
         window_overlap_ratio=0.25,
         pipeline=[
-            dict(type="mmaction.CenterCrop", crop_size=160),
-            dict(type="mmaction.FormatShape", input_format="NCTHW"),
-            dict(type="ConvertToTensor", keys=["imgs", "gt_segments", "gt_labels"]),
-            dict(type="Collect", inputs="imgs", keys=["masks", "gt_segments", "gt_labels"]),
+            dict(type="PrepareVideoInfo", format="mp4"),
+            dict(type="mmaction.DecordInit", num_threads=4),
+            dict(type="LoadFrames", num_clips=1, method="sliding_window", scale_factor=scale_factor),
+            dict(type="mmaction.DecordDecode"),
+            dict(type="mmaction.Resize", scale=(-1, 160)),
         ],
     ),
     test=dict(
-        type="ThumosSlidingDataset",
+        type="LoadSlidingVideoData",
         ann_file=annotation_path,
         subset_name="test",
         block_list=block_list,
         class_map=class_map,
         data_path=data_path,
         pt_path=pt_path,
-        use_pt = True,
         filter_gt=False,
-        test_mode=True,
+        # test_mode=True,
         # thumos dataloader setting
         feature_stride=4,
         sample_stride=1,  # 1x4=4
         window_size=window_size,
-        window_overlap_ratio=0.5,
+        window_overlap_ratio=0.25,
         pipeline=[
-            dict(type="mmaction.CenterCrop", crop_size=160),
+            dict(type="PrepareVideoInfo", format="mp4"),
+            dict(type="mmaction.DecordInit", num_threads=4),
+            dict(type="LoadFrames", num_clips=1, method="sliding_window", scale_factor=scale_factor),
+            dict(type="mmaction.DecordDecode"),
+            dict(type="mmaction.Resize", scale=(-1, 160)),
+        ],
+    ),
+    aug=dict(
+        pipeline=[
+            dict(type="mmaction.Resize", scale=(-1, 182)),
+            dict(type="mmaction.RandomResizedCrop"),
+            dict(type="mmaction.Resize", scale=(160, 160), keep_ratio=False),
+            dict(type="mmaction.Flip", flip_ratio=0.5),
+            dict(type="mmaction.ImgAug", transforms="default"),
+            dict(type="mmaction.ColorJitter"),
             dict(type="mmaction.FormatShape", input_format="NCTHW"),
-            dict(type="ConvertToTensor", keys=["imgs"]),
-            dict(type="Collect", inputs="imgs", keys=["masks"]),
+            dict(type="ConvertToTensor", keys=["imgs", "gt_segments", "gt_labels"]),
+            dict(type="Collect", inputs="imgs", keys=["masks", "gt_segments", "gt_labels"]),
         ],
     ),
 )
+
 
 
 model = dict(
@@ -121,7 +140,7 @@ model = dict(
                 dict(type="Interpolate", keys=["feats"], size=window_size),
             ],
             norm_eval=False,  # also update the norm layers
-            freeze_backbone=False,  # unfreeze the backbone
+            freeze_backbone=True,  # unfreeze the backbone
         ),
     ),
     projection=dict(
@@ -174,14 +193,7 @@ workflow = dict(
     val_loss_interval=1,
     val_eval_interval=1,
     val_start_epoch=1,
-    end_epoch=400,
+    end_epoch=200,
 )
 
-evaluation = dict(
-    type="mAP",
-    subset="test",
-    tiou_thresholds=[0.3, 0.4, 0.5, 0.6, 0.7],
-    ground_truth_filename=annotation_path,
-)
-
-work_dir = "exps/sports-editing/basketball-1029-freeze"
+work_dir = "exps/self/dataset/1029"

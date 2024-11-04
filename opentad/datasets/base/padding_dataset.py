@@ -14,6 +14,7 @@ class PaddingDataset:
         data_path,  # folder path of the raw video / pre-extracted feature
         pipeline,  # data pipeline
         class_map,  # path of the class map, convert the class id to category name
+        pt_path,
         filter_gt=False,  # if True, filter out those gt has the scale smaller than 0.01
         class_agnostic=False,  # if True, the class index will be replaced by 0
         block_list=None,  # some videos might be missed in the features or videos, we need to block them
@@ -29,6 +30,7 @@ class PaddingDataset:
 
         # basic settings
         self.data_path = data_path
+        self.pt_path = pt_path
         self.block_list = block_list
         self.ann_file = ann_file
         self.subset_name = subset_name
@@ -73,8 +75,8 @@ class PaddingDataset:
                 video_anno = {}
             else:
                 video_anno = self.get_gt(video_info)
-                if video_anno == None:  # have no valid gt
-                    continue
+                # if video_anno == None:  # have no valid gt
+                #     continue
 
             self.data_list.append([video_name, video_info, video_anno])
         assert len(self.data_list) > 0, f"No data found in {self.subset_name} subset."

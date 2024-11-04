@@ -36,31 +36,34 @@ class ThumosSlidingDataset(SlidingWindowDataset):
             # this is only valid gt inside this window
             video_anno["gt_segments"] = video_anno["gt_segments"] - window_snippet_centers[0] - self.offset_frames
             video_anno["gt_segments"] = video_anno["gt_segments"] / self.snippet_stride
+        if self.use_pt:
+            file_path = os.path.join(self.pt_path, video_name+'.pt')
+            decord_results = torch.load(file_path)
 
-        # results = self.pipeline(
-        #     dict(
-        #         video_name=video_name,
-        #         data_path=self.data_path,
-        #         window_size=self.window_size,
-        #         # trunc window setting
-        #         feature_start_idx=int(window_snippet_centers[0] / self.snippet_stride),
-        #         feature_end_idx=int(window_snippet_centers[-1] / self.snippet_stride),
-        #         sample_stride=self.sample_stride,
-        #         # sliding post process setting
-        #         fps=video_info["frame"] / video_info["duration"],
-        #         snippet_stride=self.snippet_stride,
-        #         window_start_frame=window_snippet_centers[0],
-        #         duration=video_info["duration"],
-        #         offset_frames=self.offset_frames,
-        #         # training setting
-        #         **video_anno,
-        #     )
-        # )
-        file_path = os.path.join('/data/zzm/aigc/material/basketball', video_name+'.pt')
-        decord_results = torch.load(file_path)
-        results = self.pipeline(
-            decord_results,
-        )
+            results = self.pipeline(
+                decord_results,
+            )
+        else:
+            results = self.pipeline(
+                dict(
+                    video_name=video_name,
+                    data_path=self.data_path,
+                    window_size=self.window_size,
+                    # trunc window setting
+                    feature_start_idx=int(window_snippet_centers[0] / self.snippet_stride),
+                    feature_end_idx=int(window_snippet_centers[-1] / self.snippet_stride),
+                    sample_stride=self.sample_stride,
+                    # sliding post process setting
+                    fps=video_info["frame"] / video_info["duration"],
+                    snippet_stride=self.snippet_stride,
+                    window_start_frame=window_snippet_centers[0],
+                    duration=video_info["duration"],
+                    offset_frames=self.offset_frames,
+                    # training setting
+                    **video_anno,
+                )
+            )
+        
         return results
 
 
@@ -90,7 +93,7 @@ class ThumosPaddingDataset(PaddingDataset):
 
     def __getitem__(self, index):
         video_name, video_info, video_anno = self.data_list[index]
-
+        
         if video_anno != {}:
             video_anno["gt_segments"] = video_anno["gt_segments"] - self.offset_frames
             video_anno["gt_segments"] = video_anno["gt_segments"] / self.snippet_stride
@@ -107,7 +110,8 @@ class ThumosPaddingDataset(PaddingDataset):
         #         **video_anno,
         #     )
         # )
-        file_path = os.path.join('/data/zzm/aigc/material/basketball', video_name+'.pt')
+        # video_name = video_name.split('_')[0]
+        file_path = os.path.join(self.pt_path, video_name+'.pt')
         try:
             decord_results = torch.load(file_path)
         except:
