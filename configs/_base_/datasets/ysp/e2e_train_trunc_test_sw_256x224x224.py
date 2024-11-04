@@ -1,6 +1,9 @@
-annotation_path = "/data/ysp_public_data/sport-editing/basketball_annotation/default_anno.json"
+annotation_path = "/data/ysp_public_data/sport-editing/basketball_annotation/debug_anno.json"
 class_map = "/data/ysp_public_data/sport-editing/basketball_annotation/category_idx.txt"
-data_path = "/data/ysp_public_data/sport-editing/basketball_video"
+data_path = "/data/ysp_public_data/sport-editing/basketball_debug"
+# annotation_path = "/data/ysp_public_data/sport-editing/basketball_annotation/final_anno.json"
+# class_map = "/data/ysp_public_data/sport-editing/basketball_annotation/category_idx.txt"
+# data_path = "/data/ysp_public_data/sport-editing/basketball_video_split"
 block_list = None
 
 window_size = 256
@@ -87,6 +90,8 @@ dataset = dict(
             dict(type="mmaction.FormatShape", input_format="NCTHW"),
             dict(type="ConvertToTensor", keys=["imgs"]),
             dict(type="Collect", inputs="imgs", keys=["masks"]),
+            # dict(type="ConvertToTensor", keys=["imgs", "gt_segments", "gt_labels"]),
+            # dict(type="Collect", inputs="imgs", keys=["masks", "gt_segments", "gt_labels"]),
         ],
     ),
 )
