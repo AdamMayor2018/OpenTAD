@@ -7,10 +7,10 @@ window_size = 64
 scale_factor = 1
 chunk_num = window_size * scale_factor // 16  # 768/16=48 chunks, since videomae takes 16 frames as input
 
-annotation_path = "/data/ysp_public_data/sport-editing/basketball_annotation/short_anno_1030.json"
+annotation_path = "/data/ysp_public_data/sport-editing/basketball_annotation/debug_short_anno.json"
 class_map = "/data/ysp_public_data/sport-editing/basketball_annotation/less_category_idx.txt"
-data_path = "/data/ysp_public_data/sport-editing/basketball_video_split_5class_120s_1030"
-pt_path = "/data/ysp_public_data/sport-editing/basketball_video_split_5class_120s_1030/pt"
+data_path = "/data/ysp_public_data/sport-editing/basketball_video_split_5class_debug"
+pt_path = "/data/ysp_public_data/sport-editing/basketball_video_split_5class_debug/pt"
 block_list = None
 
 dataset = dict(
@@ -184,4 +184,4 @@ evaluation = dict(
     ground_truth_filename=annotation_path,
 )
 
-work_dir = "exps/sports-editing/basketball-1029-freeze"
+work_dir = "exps/sports-editing/debug"

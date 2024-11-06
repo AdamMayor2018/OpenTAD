@@ -26,9 +26,9 @@ def get_video_info(video_path):
     return duration, frame_count
 
 
-def split_videos(anno_path, video_dir, output_dir, label_list, train_val_test,extend_time=12):
+def split_videos(anno_path, video_dir, output_dir, label_list, train_val_test,base_anno_file, new_anno_file, repeat_time=1):
     # 读取动作定位字典
-    with open(os.path.join(anno_path, 'base_anno_1030.json'), 'r') as f:
+    with open(os.path.join(anno_path, base_anno_file), 'r') as f:
         action_dict = json.load(f)
 
     # 确保输出目录存在
@@ -47,7 +47,7 @@ def split_videos(anno_path, video_dir, output_dir, label_list, train_val_test,ex
             continue
         if video_info['subset'] not in train_val_test:
             continue
-        for i in range(3):
+        for i in range(repeat_time):
             # 遍历视频中的每个标注
             for idx, anno in tqdm(enumerate(video_info['annotations']), total=len(video_info['annotations'])):
                 label = anno['label']
@@ -62,14 +62,16 @@ def split_videos(anno_path, video_dir, output_dir, label_list, train_val_test,ex
                 if label in label_list:
                     start_time, end_time = anno['segment']
                     if video_info['subset'] == 'training':
+                        # train 初始切分视频，无所谓，只要包含一个完整的视频即可
                         start_extend_time = random.randint(5, 17)
                         end_extend_time = 17-start_extend_time
                     else:
+                        # test 和 val 切分视频，根据windows 设定视频时长，最长不要超过这个长度。
                         action_time = end_time - start_time
                         if action_time > 10:
                             continue
-                        start_extend_time = random.randint(0, 10-action_time)
-                        end_extend_time = 11-start_extend_time-action_time
+                        start_extend_time = random.randint(0, 9-action_time)
+                        end_extend_time = 10-start_extend_time-action_time
                     
                     # 将时间段前后各延长3秒，
                     # 默认：对于3分、2分、扣篮、盖帽等动作，时间间隔一定会大于3秒。
@@ -107,15 +109,17 @@ def split_videos(anno_path, video_dir, output_dir, label_list, train_val_test,ex
                         import pdb;pdb.set_trace()
     
     # 保存新的动作定位字典
-    new_action_dict_path = os.path.join(anno_path, "short_anno_1030.json")
+    new_action_dict_path = os.path.join(anno_path, new_anno_file)
     with open(new_action_dict_path, 'w') as f:
         con = json.dumps(new_action_dict, indent=4)
         f.write(con)
         # json.dump(new_action_dict, f, indent=4)
 # 使用示例
 anno_path = '/data/ysp_public_data/sport-editing/basketball_annotation/'
+base_anno_file = 'debug_anno_1030.json'
 video_dir = '/data/ysp_public_data/sport-editing/basketball_video'
-output_dir = '/data/ysp_public_data/sport-editing/basketball_video_split_5class_120s_1030'
+output_dir = '/data/ysp_public_data/sport-editing/basketball_video_split_5class_debug'
+new_anno_file = 'debug_short_anno.json'
 label_list = ['Three', 'MidRangeShot', 'BreakthroughLayup', 'Dunk', 'BlockShot']
 
 
@@ -157,6 +161,6 @@ def duplicate_videos(directory, copies=3):
                 shutil.copyfile(os.path.join(directory, filename), os.path.join(directory, new_filename))
                 # print(f"复制 {filename} 为 {new_filename}")
     
-split_videos(anno_path, video_dir, output_dir, label_list, ['training', 'validation', 'test'])
+split_videos(anno_path, video_dir, output_dir, label_list, ['training', 'validation', 'test'], base_anno_file, new_anno_file)
 # new_anno(anno_path, 'training')
 # duplicate_videos(output_dir)

@@ -3,10 +3,10 @@ _base_ = [
     "../_base_/models/actionformer.py",  # model config
 ]
 
-annotation_path = "/data/ysp_public_data/sport-editing/basketball_annotation/short_anno_1030.json"
+annotation_path = "/data/ysp_public_data/sport-editing/basketball_annotation/debug_short_anno.json"
 class_map = "/data/ysp_public_data/sport-editing/basketball_annotation/less_category_idx.txt"
-data_path = "/data/ysp_public_data/sport-editing/basketball_video_split_5class_120s_1030"
-pt_path = "/data/ysp_public_data/sport-editing/basketball_video_split_5class_120s_1030/pt"
+data_path = "/data/ysp_public_data/sport-editing/basketball_video_split_5class_debug"
+pt_path = "/data/ysp_public_data/sport-editing/basketball_video_split_5class_debug/pt"
 
 block_list = None
 window_size = 64
@@ -196,4 +196,4 @@ workflow = dict(
     end_epoch=200,
 )
 
-work_dir = "exps/self/dataset/1029"
+work_dir = "exps/self/dataset/1105"
