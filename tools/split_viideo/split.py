@@ -10,7 +10,7 @@ import ffmpeg
 from tqdm import tqdm
 
 
-def load_action_data(json_file):
+def load_action_data(json_file: str):
     """
     加载动作数据从JSON文件中。
 
@@ -25,7 +25,22 @@ def load_action_data(json_file):
     return data["results"]
 
 
-def filter_action_data(action_data, conf=0.1, min_duration=3.0):
+def apply_offset(action_data: list, start_offset: float, end_offset: float):
+    """将动作片段应用偏移
+
+    Args:
+        action_data (list): 动作片段
+        start_offset (float): 开头偏移量
+        end_offset (float): 结尾偏移量
+    """
+    for segments in action_data.values():
+        for segment in segments:
+            segment["segment"][0] = max(0, segment["segment"][0] - start_offset)
+            segment["segment"][1] += end_offset
+    return action_data
+
+
+def filter_action_data(action_data: dict, conf: float = 0.1, min_duration: float = 3.0):
     for video, segments in action_data.items():
         action_data[video] = [
             segment
@@ -36,7 +51,7 @@ def filter_action_data(action_data, conf=0.1, min_duration=3.0):
     return action_data
 
 
-def merge_segments(segments, iou_threshold=0.5):
+def merge_segments(segments: list, iou_threshold: float = 0.5):
     # 按照分数降序排序
     segments = sorted(segments, key=lambda x: x["score"], reverse=True)
     merged = []
@@ -51,7 +66,7 @@ def merge_segments(segments, iou_threshold=0.5):
     return merged
 
 
-def compute_iou(seg1, seg2):
+def compute_iou(seg1: list, seg2: list):
     start1, end1 = seg1
     start2, end2 = seg2
     intersection = max(0, min(end1, end2) - max(start1, start2))
@@ -59,19 +74,18 @@ def compute_iou(seg1, seg2):
     return intersection / union if union != 0 else 0
 
 
-def apply_nms(action_data, iou_threshold=0.5):
+def apply_nms(action_data: dict, iou_threshold: float = 0.5):
     for video, segments in action_data.items():
         action_data[video] = merge_segments(segments, iou_threshold)
     return action_data
 
 
-def select_segments_by_time(videos, desired_actions, action_priorities, max_duration):
+def select_segments_by_time(videos: dict, action_priorities: dict, max_duration: float):
     """
     根据动作优先级选择视频片段。
 
     参数:
         videos (dict): 视频及其对应的动作数据。
-        desired_actions (list): 所需的动作列表。
         action_priorities (dict): 动作的优先级。
         max_duration (float): 最长时长（秒）。
 
@@ -113,7 +127,7 @@ def select_segments_by_time(videos, desired_actions, action_priorities, max_dura
         if total_duration >= max_duration:
             break
 
-    for action in desired_actions:
+    for action in action_priorities.keys():
         if action not in selected_segments_set:
             for action_info in videos[action]:
                 if not action_info["is_used"]:
@@ -126,13 +140,12 @@ def select_segments_by_time(videos, desired_actions, action_priorities, max_dura
     return selected_segments
 
 
-def select_segments_by_action(videos, desired_actions, action_priorities, max_num):
+def select_segments_by_action(videos: dict, action_priorities: dict, max_num: float):
     """
     根据动作优先级选择视频片段。
 
     参数:
         videos (dict): 视频及其对应的动作数据。
-        desired_actions (list): 所需的动作列表。
         action_priorities (dict): 动作的优先级。
         max_duration (float): 最长时长（秒）。
 
@@ -155,7 +168,7 @@ def select_segments_by_action(videos, desired_actions, action_priorities, max_nu
 
     # 如果总和不等于max_num, 则将差值分配到每个动作中
     while difference != 0:
-        for act in range(sorted_actions.keys()):
+        for act, _ in sorted_actions:
             if difference == 0:
                 break
             if difference > 0:
@@ -169,6 +182,7 @@ def select_segments_by_action(videos, desired_actions, action_priorities, max_nu
     for action, max_cnt in target_count.items():
         cur_count = 0
         for action_info in videos[action]:
+            action_info["action"] = action
             selected_segments.append(action_info)
             cur_count += 1
             if cur_count >= max_cnt:
@@ -177,7 +191,7 @@ def select_segments_by_action(videos, desired_actions, action_priorities, max_nu
     return selected_segments
 
 
-def split_and_concat_videos(selected_segments, start_offset, end_offset):
+def split_and_concat_videos(selected_segments: list):
     """
     分割并拼接选定的片段生成精彩视频。
 
@@ -195,19 +209,15 @@ def split_and_concat_videos(selected_segments, start_offset, end_offset):
 
     trimmed_clips = []
 
-    VIDEO_BASE_DIR = Path(
-        "/data/ysp_public_data/sport-editing/basketball_video_split_10s"
-    )
+    VIDEO_BASE_DIR = Path("/data/ysp_public_data/sport-editing/basketball_video/")
 
-    def trim_clip(action_info, index, start_offset, end_offset):
+    def trim_clip(action_info, index):
         start, end = action_info["segment"]
-        start = max(0, start - start_offset)
-        end += end_offset
         input_video_path = str(VIDEO_BASE_DIR / action_info["video_name"]) + ".mp4"
         temp_output = output_dir / f"clip_{index}.mp4"
 
         # 构建文字内容
-        text = f"视频: {action_info['video_name']}, 时间: {start}-{end}秒"
+        text = f"视频: {action_info['video_name']}, 时间: {start}-{end}秒, action: {action_info['action']}"
 
         # 使用 ffmpeg 添加文字叠加
         try:
@@ -237,7 +247,7 @@ def split_and_concat_videos(selected_segments, start_offset, end_offset):
     # 使用线程池进行多线程处理
     with ThreadPoolExecutor(max_workers=os.cpu_count()) as executor:
         future_to_index = {
-            executor.submit(trim_clip, video_info, idx, start_offset, end_offset): idx
+            executor.submit(trim_clip, video_info, idx): idx
             for idx, video_info in enumerate(selected_segments)
         }
         for future in tqdm(
@@ -319,9 +329,53 @@ def transform_annotation(nms_data, video_list):
     return transformed_videos
 
 
+def prepare_data(
+    video_list,
+    json_file,
+    action_data,
+    start_offset,
+    end_offset,
+    conf=0,
+    min_duration=3.0,
+    iou_threshold=0.3,
+):
+    """
+    准备数据，包括过滤、偏移、nms
+
+    参数:
+        json_file (str): JSON数据文件路径。
+        action_data (dict): 动作数据。
+        start_offset (float): 开始偏移（秒）。
+        end_offset (float): 结束偏移（秒）。
+        conf (float): 动作置信度阈值。
+        min_duration (float): 最小动作时长（秒）。
+        iou_threshold (float): nms阈值。
+
+    返回:
+        dict: 经过过滤、偏移、nms后的动作数据。
+    """
+    # 加载动作数据
+    action_data = load_action_data(json_file)
+
+    # 过滤数据
+    filtered_data = filter_action_data(
+        action_data, conf=conf, min_duration=min_duration
+    )
+
+    # 偏移数据
+    offset_data = apply_offset(filtered_data, start_offset, end_offset)
+
+    # nms数据
+    nms_data = apply_nms(offset_data, iou_threshold=iou_threshold)
+
+    transformed_videos = transform_annotation(nms_data, video_list)
+    pprint(transformed_videos)
+
+    return transformed_videos
+
+
 def gen_by_time(
     video_list,
-    desired_actions,
     action_priorities,
     max_duration,
     json_file,
@@ -333,7 +387,6 @@ def gen_by_time(
 
     参数:
         video_list (list): 视频列表。
-        desired_actions (list): 所需的动作列表。
         action_priorities (dict): 动作的优先级。
         max_duration (float): 最大时长（秒）。
         json_file (str): JSON数据文件路径。
@@ -344,26 +397,27 @@ def gen_by_time(
     if max_duration < 30:
         max_duration = 30
 
-    # 加载动作数据
-    action_data = load_action_data(json_file)
-
-    filtered_data = filter_action_data(action_data, conf=0, min_duration=3.0)
-    nms_data = apply_nms(filtered_data, iou_threshold=0.3)
-
-    transformed_videos = transform_annotation(nms_data, video_list)
+    transformed_videos = prepare_data(
+        video_list,
+        json_file,
+        action_data=None,
+        start_offset=start_offset,
+        end_offset=end_offset,
+        conf=0,
+        min_duration=3.0,
+        iou_threshold=0.3,
+    )
     # 选择符合条件的片段
     selected_segments = select_segments_by_time(
-        transformed_videos, desired_actions, action_priorities, max_duration
+        transformed_videos, action_priorities, max_duration
     )
-
     pprint(selected_segments)
     # 分割并拼接选择的片段生成输出视频
-    split_and_concat_videos(selected_segments, start_offset, end_offset)
+    split_and_concat_videos(selected_segments)
 
 
 def gen_by_action(
     video_list,
-    desired_actions,
     action_priorities,
     max_num,
     json_file,
@@ -375,42 +429,47 @@ def gen_by_action(
 
     参数:
         video_list (list): 视频列表。
-        desired_actions (list): 所需的动作列表。
         action_priorities (dict): 动作的优先级。
         json_file (str): JSON数据文件路径。
         start_offset (float): 开始偏移（秒）。
         end_offset (float): 结束偏移（秒）。
     """
 
-    # 加载动作数据
-    action_data = load_action_data(json_file)
-
-    filtered_data = filter_action_data(action_data, conf=0, min_duration=3.0)
-    nms_data = apply_nms(filtered_data, iou_threshold=0.3)
-
-    transformed_videos = transform_annotation(nms_data, video_list)
-    pprint(transformed_videos)
-    # 选择符合条件的片段
-    selected_segments = select_segments_by_action(
-        transformed_videos, desired_actions, action_priorities, max_num
+    transformed_videos = prepare_data(
+        video_list,
+        json_file,
+        action_data=None,
+        start_offset=start_offset,
+        end_offset=end_offset,
+        conf=0,
+        min_duration=3.0,
+        iou_threshold=0.3,
     )
 
+    # 选择符合条件的片段
+    selected_segments = select_segments_by_action(
+        transformed_videos, action_priorities, max_num
+    )
     pprint(selected_segments)
     # 分割并拼接选择的片段生成输出视频
-    split_and_concat_videos(selected_segments, start_offset, end_offset)
+    split_and_concat_videos(selected_segments)
 
 
 if __name__ == "__main__":
-    video_list = []  # 示例视频列表
-    desired_actions = ["Three"]  # 示例所需动作
-    action_priorities = {"Three": 1.0}  # 示例动作优先级
+    video_list = ["v000046cqem_test_1section"]  # 示例视频列表
+    action_priorities = {
+        "Three": 1,
+        "MidRangeShot": 1,
+        "BreakthroughLayup": 1,
+        "Dunk": 1,
+        "BlockShot": 1,
+    }  # 示例动作优先级
     max_duration = 60  # 示例最大时长（秒）
-    json_file = "/data/zzm/aigc/OpenTAD/exps/thumos/adatad/e2e_actionformer_videomae_s_768x1_160_adapter/basketball-1010-freeze/gpu8_id0/result_detection.json"  # 假设的JSON文件名
+    json_file = "/data/zzm/aigc/OpenTAD/exps/sports-editing/basketball-1104-freeze/gpu4_id0/result_detection.json"  # 假设的JSON文件名
 
     # 根据时间生成视频
     # gen_by_time(
     #     video_list,
-    #     desired_actions,
     #     action_priorities,
     #     max_duration,
     #     json_file,
@@ -421,9 +480,8 @@ if __name__ == "__main__":
     # 根据片段个数生成视频
     gen_by_action(
         video_list,
-        desired_actions,
         action_priorities,
-        5,
+        25,
         json_file,
         start_offset=3,
         end_offset=3,
